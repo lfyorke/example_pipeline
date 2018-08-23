@@ -71,9 +71,10 @@ class TestPipeline:
         :return:
         """
         with open(source_file_path) as f:
-            string = f.readline().strip()
-            d = json.loads(string)
-            return d
+            for line in f:
+                string = line.strip()
+                d = json.loads(string)
+                yield d
 
     def transform(self):
         """
@@ -84,14 +85,14 @@ class TestPipeline:
         """
         pass
 
-    def load(self):
+    def load(self, f, data):
         """
         Method to write transformed dataset.
 
         :param data:
         :return:
         """
-        pass
+        f.write(str(data) + "\n")
 
     def run(self):
         """
@@ -99,15 +100,15 @@ class TestPipeline:
 
         :return:
         """
+        with open('results.txt', 'a') as f:
+            for row in self.extract(self.source_file_path):
+                flattened = self.flatten(row)
+                cleaned = self.remove_lists(self.flatten(self.clean_imp(flattened)))
+                feature_dict = self.del_features(cleaned)
+                self.load(f, feature_dict)
 
-        test = self.extract(self.source_file_path)
-        flattened = self.flatten(test)
-        cleaned = self.remove_lists(self.flatten(self.clean_imp(flattened)))
-        feature_dict = self.del_features(cleaned)
-
-        print(feature_dict)
-        self.load()
-        self.transform()
+                print(feature_dict)
+                self.transform()
 
 if __name__ == "__main__":
     pipeline = TestPipeline(source_file_path='part-00000-tid-8372074912937359139-bed8e65e-b634-4e1b-9e14-af856a68bdd0-10-c000.txt')
